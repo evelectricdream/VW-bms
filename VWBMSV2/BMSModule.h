@@ -33,6 +33,7 @@ class BMSModule
     int getAddress();
     int getType();
     int getBalStat();
+    bool hasDecodedData();
     bool isExisting();
     bool hasRecentData();
     bool isStale();

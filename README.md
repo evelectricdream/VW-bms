@@ -27,4 +27,4 @@ The UI reads existing decoded values from `BMSModule` through `BMSModuleManager`
 - `BMSModule::getModuleVoltage()`
 - `BMSModule::getTemperature()`
 - `BMSModule::getAddress()`
-- `BMSModule::hasRecentData()` / `isStale()`
+- `BMSModule::hasDecodedData()` / `isStale()`

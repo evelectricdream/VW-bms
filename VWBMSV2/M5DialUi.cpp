@@ -106,7 +106,13 @@ void M5DialUi::stepSelection(int delta)
   }
 
   int direction = (delta > 0) ? 1 : -1;
-  for (int i = 0; i < abs(delta); i++)
+  int steps = abs(delta);
+  if (steps > 8)
+  {
+    steps = 8;
+  }
+
+  for (int i = 0; i < steps; i++)
   {
     selectedModule = bms.getNextExistingModule(selectedModule, direction);
     if (selectedModule == 0)
@@ -137,7 +143,7 @@ BMSModule *M5DialUi::getSelectedModule()
 
 bool M5DialUi::moduleHasData(BMSModule *module)
 {
-  return module != nullptr && module->isExisting() && module->hasRecentData();
+  return module != nullptr && module->hasDecodedData();
 }
 
 bool M5DialUi::moduleIsStale(BMSModule *module)

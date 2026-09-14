@@ -1,4 +1,4 @@
-#include "config.h"
+#include "CONFIG.H"
 #include "BMSModule.h"
 #include "Logger.h"
 
@@ -555,6 +555,11 @@ int BMSModule::getBalStat()
   return balstat;
 }
 
+bool BMSModule::hasDecodedData()
+{
+  return exists && (getHighCellV() > IgnoreCell || temperatures[0] > 0.5f || temperatures[1] > 0.5f || temperatures[2] > 0.5f || lasterror != 0);
+}
+
 bool BMSModule::isExisting()
 {
   return exists;
@@ -562,12 +567,12 @@ bool BMSModule::isExisting()
 
 bool BMSModule::hasRecentData()
 {
-  return exists && (lasterror != 0 || getHighCellV() > IgnoreCell || temperatures[0] > 0.5f || temperatures[1] > 0.5f || temperatures[2] > 0.5f);
+  return hasDecodedData() && lasterror != 0 && ((millis() - lasterror) <= timeout);
 }
 
 bool BMSModule::isStale()
 {
-  return exists && hasRecentData() && ((millis() - lasterror) > timeout);
+  return hasDecodedData() && lasterror != 0 && ((millis() - lasterror) > timeout);
 }
 
 bool BMSModule::isReset()
