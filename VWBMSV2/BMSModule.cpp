@@ -22,9 +22,23 @@ BMSModule::BMSModule()
   balstat = 0;
   exists = false;
   reset = false;
+  alerts = 0;
+  faults = 0;
+  COVFaults = 0;
+  CUVFaults = 0;
+  sensor = 0;
+  scells = 0;
   moduleAddress = 0;
-  timeout = 30000; //milliseconds before comms timeout;
+  lasterror = 0;
+  lastVoltageUpdateMillis = 0;
+  lastTemperatureUpdateMillis = 0;
+  cmuerror = 0;
+  timeout = 30000U; //milliseconds before comms timeout;
   type = 1;
+  IgnoreCell = 0.0f;
+  VoltDelta = 0.0f;
+  hasVoltageData = false;
+  hasTemperatureData = false;
 }
 
 void BMSModule::clearmodule()
@@ -41,6 +55,10 @@ void BMSModule::clearmodule()
   exists = false;
   reset = false;
   moduleAddress = 0;
+  lastVoltageUpdateMillis = 0;
+  lastTemperatureUpdateMillis = 0;
+  hasVoltageData = false;
+  hasTemperatureData = false;
 }
 
 void BMSModule::decodebalVW(CAN_message_t &msg) {
@@ -94,10 +112,20 @@ void BMSModule::decodetemp(CAN_message_t &msg, int y)
     type = 2;
     temperatures[0] = ((uint16_t(((msg.buf[5] & 0x0F) << 4) | ((msg.buf[4] & 0xF0) >> 4))) * 0.5) - 40; //MEB Bits 36-44
   }
+
+  noInterrupts();
+  hasTemperatureData = true;
+  lastTemperatureUpdateMillis = millis();
+  interrupts();
+
+  if (getLowTemp() < lowestTemperature) lowestTemperature = getLowTemp();
+  if (getHighTemp() > highestTemperature) highestTemperature = getHighTemp();
 }
 
 void BMSModule::decodecan(int Id, CAN_message_t &msg)
 {
+  bool voltageDecoded = false;
+
   switch (Id)
   {
     case 0:
@@ -106,6 +134,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       cellVolt[2] = (uint16_t(msg.buf[5] << 4) + uint16_t(msg.buf[4] >> 4) + 1000) * 0.001;
       cellVolt[1] = (msg.buf[3] + uint16_t((msg.buf[4] & 0x0F) << 8) + 1000) * 0.001;
       cellVolt[3] = (msg.buf[6] + uint16_t((msg.buf[7] & 0x0F) << 8) + 1000) * 0.001;
+      voltageDecoded = true;
 
       /*
         if (float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > 0 && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) < cellVolt[0] + VoltDelta && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > cellVolt[0] - VoltDelta || cellVolt[0] == 0)
@@ -148,6 +177,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       cellVolt[6] = (uint16_t(msg.buf[5] << 4) + uint16_t(msg.buf[4] >> 4) + 1000) * 0.001;
       cellVolt[5] = (msg.buf[3] + uint16_t((msg.buf[4] & 0x0F) << 8) + 1000) * 0.001;
       cellVolt[7] = (msg.buf[6] + uint16_t((msg.buf[7] & 0x0F) << 8) + 1000) * 0.001;
+      voltageDecoded = true;
       /*
         if (float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > 0 && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) < cellVolt[4] + VoltDelta && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > cellVolt[4] - VoltDelta || cellVolt[4] == 0)
         {
@@ -190,6 +220,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       cellVolt[10] = (uint16_t(msg.buf[5] << 4) + uint16_t(msg.buf[4] >> 4) + 1000) * 0.001;
       cellVolt[9] = (msg.buf[3] + uint16_t((msg.buf[4] & 0x0F) << 8) + 1000) * 0.001;
       cellVolt[11] = (msg.buf[6] + uint16_t((msg.buf[7] & 0x0F) << 8) + 1000) * 0.001;
+      voltageDecoded = true;
       /*
         if (float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > 0 && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) < cellVolt[8] + VoltDelta && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > cellVolt[8] - VoltDelta || cellVolt[8] == 0)
         {
@@ -231,15 +262,14 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
     case 3:
       cmuerror = 0;
       cellVolt[12] = (uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001;
+      voltageDecoded = true;
       break;
 
     default:
       break;
 
   }
-  if (getLowTemp() < lowestTemperature) lowestTemperature = getLowTemp();
-  if (getHighTemp() > highestTemperature) highestTemperature = getHighTemp();
-
+  hasVoltageData = hasVoltageData || voltageDecoded;
   for (int i = 0; i < 13; i++)
   {
     if (lowestCellVolt[i] > cellVolt[i] && cellVolt[i] >= IgnoreCell) lowestCellVolt[i] = cellVolt[i];
@@ -248,7 +278,10 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   if (cmuerror == 0)
   {
+    noInterrupts();
+    lastVoltageUpdateMillis = millis();
     lasterror = millis();
+    interrupts();
   }
   else
   {
@@ -304,7 +337,7 @@ uint8_t BMSModule::getCUVCells()
 
 float BMSModule::getCellVoltage(int cell)
 {
-  if (cell < 0 || cell > 13) return 0.0f;
+  if (cell < 0 || cell >= 13) return 0.0f;
   return cellVolt[cell];
 }
 
@@ -367,13 +400,13 @@ float BMSModule::getLowestModuleVolt()
 
 float BMSModule::getHighestCellVolt(int cell)
 {
-  if (cell < 0 || cell > 13) return 0.0f;
+  if (cell < 0 || cell >= 13) return 0.0f;
   return highestCellVolt[cell];
 }
 
 float BMSModule::getLowestCellVolt(int cell)
 {
-  if (cell < 0 || cell > 13) return 0.0f;
+  if (cell < 0 || cell >= 13) return 0.0f;
   return lowestCellVolt[cell];
 }
 
@@ -427,6 +460,8 @@ float BMSModule::getLowTemp()
   {
     return temperatures[0];
   }
+
+  return -80.0f;
 }
 
 float BMSModule::getHighTemp()
@@ -499,12 +534,14 @@ float BMSModule::getAvgTemp()
   {
     return temperatures[0];
   }
+
+  return -80.0f;
 }
 
 float BMSModule::getModuleVoltage()
 {
   moduleVolt = 0;
-  for (int I; I < 13; I++)
+  for (int I = 0; I < 13; I++)
   {
     if (cellVolt[I] > IgnoreCell && cellVolt[I] < 5.0)
     {
@@ -541,9 +578,95 @@ int BMSModule::getBalStat()
   return balstat;
 }
 
+bool BMSModule::hasDecodedData()
+{
+  bool moduleExists;
+  bool voltageAvailable;
+  bool temperatureAvailable;
+
+  noInterrupts();
+  moduleExists = exists;
+  voltageAvailable = hasVoltageData;
+  temperatureAvailable = hasTemperatureData;
+  interrupts();
+
+  return moduleExists && (voltageAvailable || temperatureAvailable);
+}
+
+bool BMSModule::hasVoltageDataAvailable()
+{
+  bool moduleExists;
+  bool voltageAvailable;
+
+  noInterrupts();
+  moduleExists = exists;
+  voltageAvailable = hasVoltageData;
+  interrupts();
+
+  return moduleExists && voltageAvailable;
+}
+
+bool BMSModule::hasTemperatureDataAvailable()
+{
+  bool moduleExists;
+  bool temperatureAvailable;
+
+  noInterrupts();
+  moduleExists = exists;
+  temperatureAvailable = hasTemperatureData;
+  interrupts();
+
+  return moduleExists && temperatureAvailable;
+}
+
 bool BMSModule::isExisting()
 {
   return exists;
+}
+
+bool BMSModule::hasRecentData()
+{
+  bool voltageAvailable;
+  uint32_t lastVoltageUpdate;
+  uint32_t timeoutValue;
+
+  noInterrupts();
+  voltageAvailable = exists && hasVoltageData;
+  lastVoltageUpdate = lastVoltageUpdateMillis;
+  timeoutValue = timeout;
+  interrupts();
+
+  return voltageAvailable && ((millis() - lastVoltageUpdate) <= timeoutValue);
+}
+
+bool BMSModule::isStale()
+{
+  bool voltageAvailable;
+  uint32_t lastVoltageUpdate;
+  uint32_t timeoutValue;
+
+  noInterrupts();
+  voltageAvailable = exists && hasVoltageData;
+  lastVoltageUpdate = lastVoltageUpdateMillis;
+  timeoutValue = timeout;
+  interrupts();
+
+  return voltageAvailable && ((millis() - lastVoltageUpdate) > timeoutValue);
+}
+
+bool BMSModule::isTemperatureStale()
+{
+  bool temperatureAvailable;
+  uint32_t lastTemperatureUpdate;
+  uint32_t timeoutValue;
+
+  noInterrupts();
+  temperatureAvailable = exists && hasTemperatureData;
+  lastTemperatureUpdate = lastTemperatureUpdateMillis;
+  timeoutValue = timeout;
+  interrupts();
+
+  return temperatureAvailable && ((millis() - lastTemperatureUpdate) > timeoutValue);
 }
 
 bool BMSModule::isReset()

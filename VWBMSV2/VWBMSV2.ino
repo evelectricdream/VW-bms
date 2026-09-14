@@ -23,6 +23,7 @@
 #include "config.h"
 #include "SerialConsole.h"
 #include "Logger.h"
+#include "M5DialUi.h"
 #include <ADC.h>  //https://github.com/pedvide/ADC
 #include <EEPROM.h>
 #include <FlexCAN.h>  //https://github.com/collin80/FlexCAN_Library
@@ -33,6 +34,9 @@
 #define CPU_REBOOT (_reboot_Teensyduino_());
 
 BMSModuleManager bms;
+#if VW_BMS_HAS_M5DIAL_UI
+M5DialUi m5DialUi(bms);
+#endif
 SerialConsole console;
 EEPROMSettings settings;
 
@@ -339,8 +343,10 @@ void setup() {
   SERIALCONSOLE.begin(115200);
   SERIALCONSOLE.println("Starting up!");
   SERIALCONSOLE.println("SimpBMS V2 VW");
-
-  Serial2.begin(115200);
+  VE.begin(115200);
+#if VW_BMS_HAS_M5DIAL_UI
+  m5DialUi.begin();
+#endif
 
   // Display reason the Teensy was last reset
   Serial.println();
@@ -442,6 +448,10 @@ void loop() {
   while (Can0.available()) {
     canread();
   }
+
+#if VW_BMS_HAS_M5DIAL_UI
+  m5DialUi.update();
+#endif
 
   if (SERIALCONSOLE.available() > 0) {
     menu();

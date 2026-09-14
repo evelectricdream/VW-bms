@@ -775,6 +775,55 @@ int BMSModuleManager::getNumModules() {
   return numFoundModules;
 }
 
+BMSModule *BMSModuleManager::getModule(int moduleAddress) {
+  if (moduleAddress < 1 || moduleAddress > MAX_MODULE_ADDR) {
+    return nullptr;
+  }
+
+  return &modules[moduleAddress];
+}
+
+int BMSModuleManager::getFirstExistingModule() {
+  for (int moduleAddress = 1; moduleAddress <= MAX_MODULE_ADDR; moduleAddress++) {
+    if (modules[moduleAddress].isExisting()) {
+      return moduleAddress;
+    }
+  }
+
+  return 0;
+}
+
+int BMSModuleManager::getNextExistingModule(int currentModule, int direction) {
+  if (direction == 0) {
+    return getFirstExistingModule();
+  }
+
+  int firstExistingModule = getFirstExistingModule();
+  if (firstExistingModule == 0) {
+    return 0;
+  }
+
+  if (currentModule < 1 || currentModule > MAX_MODULE_ADDR || !modules[currentModule].isExisting()) {
+    currentModule = firstExistingModule;
+  }
+
+  for (int step = 0; step < MAX_MODULE_ADDR; step++) {
+    currentModule += (direction > 0) ? 1 : -1;
+
+    if (currentModule > MAX_MODULE_ADDR) {
+      currentModule = 1;
+    } else if (currentModule < 1) {
+      currentModule = MAX_MODULE_ADDR;
+    }
+
+    if (modules[currentModule].isExisting()) {
+      return currentModule;
+    }
+  }
+
+  return firstExistingModule;
+}
+
 float BMSModuleManager::getLowVoltage() {
   return lowestPackVolt;
 }

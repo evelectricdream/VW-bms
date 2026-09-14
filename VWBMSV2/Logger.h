@@ -53,5 +53,3 @@ private:
 };
 
 #endif /* LOGGER_H_ */
-
-
