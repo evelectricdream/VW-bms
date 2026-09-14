@@ -20,7 +20,7 @@
 */
 #include "BMSModuleManager.h"
 #include <Arduino.h>
-#include "CONFIG.H"
+#include "config.h"
 #include "SerialConsole.h"
 #include "Logger.h"
 #include "M5DialUi.h"

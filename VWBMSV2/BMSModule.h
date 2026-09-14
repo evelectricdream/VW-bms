@@ -68,6 +68,7 @@ class BMSModule
     int scells;
     uint32_t balstat;
     uint32_t lasterror;
+    uint32_t lastUpdateMillis;
     uint8_t cmuerror;
     uint32_t timeout;
     int type;

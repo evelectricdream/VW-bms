@@ -1,4 +1,4 @@
-#include "CONFIG.H"
+#include "config.h"
 #include "BMSModule.h"
 #include "Logger.h"
 
@@ -30,6 +30,7 @@ BMSModule::BMSModule()
   scells = 0;
   moduleAddress = 0;
   lasterror = 0;
+  lastUpdateMillis = 0;
   cmuerror = 0;
   timeout = 30000; //milliseconds before comms timeout;
   type = 1;
@@ -51,6 +52,7 @@ void BMSModule::clearmodule()
   exists = false;
   reset = false;
   moduleAddress = 0;
+  lastUpdateMillis = 0;
 }
 
 void BMSModule::decodebalVW(CAN_message_t &msg) {
@@ -258,6 +260,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   if (cmuerror == 0)
   {
+    lastUpdateMillis = millis();
     lasterror = millis();
   }
   else
@@ -557,7 +560,7 @@ int BMSModule::getBalStat()
 
 bool BMSModule::hasDecodedData()
 {
-  return exists && (getHighCellV() > IgnoreCell || temperatures[0] > 0.5f || temperatures[1] > 0.5f || temperatures[2] > 0.5f || lasterror != 0);
+  return exists && (getHighCellV() > IgnoreCell || temperatures[0] > 0.5f || temperatures[1] > 0.5f || temperatures[2] > 0.5f);
 }
 
 bool BMSModule::isExisting()
@@ -567,12 +570,12 @@ bool BMSModule::isExisting()
 
 bool BMSModule::hasRecentData()
 {
-  return hasDecodedData() && lasterror != 0 && ((millis() - lasterror) <= timeout);
+  return hasDecodedData() && ((millis() - lastUpdateMillis) <= timeout);
 }
 
 bool BMSModule::isStale()
 {
-  return hasDecodedData() && lasterror != 0 && ((millis() - lasterror) > timeout);
+  return hasDecodedData() && ((millis() - lastUpdateMillis) > timeout);
 }
 
 bool BMSModule::isReset()

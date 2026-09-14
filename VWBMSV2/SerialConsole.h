@@ -27,7 +27,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SERIALCONSOLE_H_
 #define SERIALCONSOLE_H_
 
-#include "CONFIG.H"
+#include "config.h"
 
 class SerialConsole {
 public:
@@ -56,4 +56,3 @@ private:
 };
 
 #endif /* SERIALCONSOLE_H_ */
-
