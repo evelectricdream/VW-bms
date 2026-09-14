@@ -347,7 +347,9 @@ void setup() {
   m5DialUi.begin();
 #endif
 
+#if !VW_BMS_HAS_M5DIAL_UI
   VE.begin(115200);
+#endif
 
   // Display reason the Teensy was last reset
   Serial.println();

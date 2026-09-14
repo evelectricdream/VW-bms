@@ -271,7 +271,10 @@ void M5DialUi::renderNoData(const char *title)
   drawLine(4, "");
   drawLine(5, "");
   drawLine(6, "");
-  clearCellBar();
+  if (currentScreen == CellScreen)
+  {
+    clearCellBar();
+  }
   drawFooter(footer);
 #endif
 }
@@ -360,7 +363,9 @@ void M5DialUi::drawCellBar(float voltage)
   if (clamped < 2.50f) clamped = 2.50f;
   if (clamped > 4.30f) clamped = 4.30f;
 
-  int width = int(((clamped - 2.50f) / 1.80f) * 180.0f);
+  int width = int(((clamped - 2.50f) / 1.80f) * 198.0f);
+  if (width < 0) width = 0;
+  if (width > 198) width = 198;
 
   clearCellBar();
   M5Dial.Display.drawRect(20, 164, 200, 20, UI_DIM);
