@@ -79,6 +79,7 @@ void M5DialUi::handleInput()
     forceRefresh = true;
   }
 
+  M5Dial.BtnA.read();
   if (M5Dial.BtnA.wasPressed())
   {
     cycleScreen();
@@ -270,7 +271,7 @@ void M5DialUi::renderNoData(const char *title)
   drawLine(4, "");
   drawLine(5, "");
   drawLine(6, "");
-  M5Dial.Display.fillRect(20, 164, 200, 38, UI_BACKGROUND);
+  clearCellBar();
   drawFooter(footer);
 #endif
 }
@@ -322,6 +323,11 @@ void M5DialUi::drawFooter(const char *text, uint16_t color)
   M5Dial.Display.print(text);
 }
 
+void M5DialUi::clearCellBar()
+{
+  M5Dial.Display.fillRect(20, 164, 200, 20, UI_BACKGROUND);
+}
+
 void M5DialUi::drawCellBar(float voltage)
 {
   uint16_t barColor = UI_GOOD;
@@ -340,8 +346,8 @@ void M5DialUi::drawCellBar(float voltage)
 
   int width = int(((clamped - 2.50f) / 1.80f) * 180.0f);
 
+  clearCellBar();
   M5Dial.Display.drawRect(20, 164, 200, 20, UI_DIM);
-  M5Dial.Display.fillRect(21, 165, 198, 18, UI_BACKGROUND);
   M5Dial.Display.fillRect(21, 165, width, 18, barColor);
 }
 #endif

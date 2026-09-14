@@ -65,6 +65,7 @@ class M5DialUi
     void drawHeader(const char *title);
     void drawLine(int line, const String &text, uint16_t color = 0xFFFF);
     void drawFooter(const char *text, uint16_t color = 0x7BEF);
+    void clearCellBar();
     void drawCellBar(float voltage);
 #endif
 };
