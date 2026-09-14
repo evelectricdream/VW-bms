@@ -22,6 +22,9 @@ The `VWBMSV2/M5DialUi.*` module adds a read-only M5Dial display layer on top of 
 
 The UI reads existing decoded values from `BMSModule` through `BMSModuleManager` read-only accessors:
 
+- `BMSModuleManager::getModule()`
+- `BMSModuleManager::getFirstExistingModule()`
+- `BMSModuleManager::getNextExistingModule()`
 - `BMSModule::getCellVoltage()`
 - `BMSModule::getLowCellV()` / `getHighCellV()`
 - `BMSModule::getModuleVoltage()`

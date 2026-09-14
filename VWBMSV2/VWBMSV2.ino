@@ -34,7 +34,9 @@
 #define CPU_REBOOT (_reboot_Teensyduino_());
 
 BMSModuleManager bms;
+#if VW_BMS_HAS_M5DIAL_UI
 M5DialUi m5DialUi(bms);
+#endif
 SerialConsole console;
 EEPROMSettings settings;
 
@@ -341,7 +343,9 @@ void setup() {
   SERIALCONSOLE.begin(115200);
   SERIALCONSOLE.println("Starting up!");
   SERIALCONSOLE.println("SimpBMS V2 VW");
+#if VW_BMS_HAS_M5DIAL_UI
   m5DialUi.begin();
+#endif
 
   Serial2.begin(115200);
 
@@ -446,7 +450,9 @@ void loop() {
     canread();
   }
 
+#if VW_BMS_HAS_M5DIAL_UI
   m5DialUi.update();
+#endif
 
   if (SERIALCONSOLE.available() > 0) {
     menu();
