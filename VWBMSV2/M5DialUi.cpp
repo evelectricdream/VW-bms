@@ -14,7 +14,7 @@ namespace
 M5DialUi::M5DialUi(BMSModuleManager &manager, uint32_t refreshIntervalMs)
   : bms(manager), refreshInterval(refreshIntervalMs), lastRefresh(0), selectedModule(0), selectedCell(0), currentScreen(SummaryScreen), forceRefresh(true)
 #if VW_BMS_HAS_M5DIAL_UI
-  , lastRenderedScreen(SummaryScreen)
+  , lastRenderedScreen(SummaryScreen), footerColorCache(UI_DIM)
 #endif
 {
 }
@@ -279,6 +279,9 @@ void M5DialUi::renderNoData(const char *title)
 #if VW_BMS_HAS_M5DIAL_UI
 void M5DialUi::resetLineCache()
 {
+  headerCache = "";
+  footerCache = "";
+  footerColorCache = UI_DIM;
   for (int i = 0; i < LINE_COUNT; i++)
   {
     lineCache[i] = "";
@@ -288,10 +291,16 @@ void M5DialUi::resetLineCache()
 
 void M5DialUi::drawHeader(const char *title)
 {
+  if (!forceRefresh && headerCache == String(title))
+  {
+    return;
+  }
+
   M5Dial.Display.fillRect(0, 0, 240, 26, UI_BACKGROUND);
   M5Dial.Display.setCursor(12, 6);
   M5Dial.Display.setTextColor(UI_ACCENT, UI_BACKGROUND);
   M5Dial.Display.print(title);
+  headerCache = String(title);
 }
 
 void M5DialUi::drawLine(int line, const String &text, uint16_t color)
@@ -317,10 +326,17 @@ void M5DialUi::drawLine(int line, const String &text, uint16_t color)
 
 void M5DialUi::drawFooter(const char *text, uint16_t color)
 {
+  if (!forceRefresh && footerCache == String(text) && footerColorCache == color)
+  {
+    return;
+  }
+
   M5Dial.Display.fillRect(0, 214, 240, 26, UI_BACKGROUND);
   M5Dial.Display.setCursor(12, 220);
   M5Dial.Display.setTextColor(color, UI_BACKGROUND);
   M5Dial.Display.print(text);
+  footerCache = String(text);
+  footerColorCache = color;
 }
 
 void M5DialUi::clearCellBar()

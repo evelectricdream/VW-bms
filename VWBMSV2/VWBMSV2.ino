@@ -347,7 +347,7 @@ void setup() {
   m5DialUi.begin();
 #endif
 
-  Serial2.begin(115200);
+  VE.begin(115200);
 
   // Display reason the Teensy was last reset
   Serial.println();
