@@ -110,6 +110,9 @@ void BMSModule::decodetemp(CAN_message_t &msg, int y)
     type = 2;
     temperatures[0] = ((uint16_t(((msg.buf[5] & 0x0F) << 4) | ((msg.buf[4] & 0xF0) >> 4))) * 0.5) - 40; //MEB Bits 36-44
   }
+
+  hasTemperatureData = true;
+  lastUpdateMillis = millis();
 }
 
 void BMSModule::decodecan(int Id, CAN_message_t &msg)
@@ -435,7 +438,6 @@ float BMSModule::getLowTemp()
           }
         }
       }
-      hasTemperatureData = true;
     }
     else
     {
