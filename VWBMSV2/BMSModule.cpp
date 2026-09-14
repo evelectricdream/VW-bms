@@ -113,8 +113,13 @@ void BMSModule::decodetemp(CAN_message_t &msg, int y)
     temperatures[0] = ((uint16_t(((msg.buf[5] & 0x0F) << 4) | ((msg.buf[4] & 0xF0) >> 4))) * 0.5) - 40; //MEB Bits 36-44
   }
 
+  noInterrupts();
   hasTemperatureData = true;
   lastTemperatureUpdateMillis = millis();
+  interrupts();
+
+  if (getLowTemp() < lowestTemperature) lowestTemperature = getLowTemp();
+  if (getHighTemp() > highestTemperature) highestTemperature = getHighTemp();
 }
 
 void BMSModule::decodecan(int Id, CAN_message_t &msg)
@@ -265,12 +270,6 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   }
   hasVoltageData = hasVoltageData || voltageDecoded;
-  if (hasTemperatureData)
-  {
-    if (getLowTemp() < lowestTemperature) lowestTemperature = getLowTemp();
-    if (getHighTemp() > highestTemperature) highestTemperature = getHighTemp();
-  }
-
   for (int i = 0; i < 13; i++)
   {
     if (lowestCellVolt[i] > cellVolt[i] && cellVolt[i] >= IgnoreCell) lowestCellVolt[i] = cellVolt[i];
@@ -279,8 +278,10 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   if (cmuerror == 0)
   {
+    noInterrupts();
     lastVoltageUpdateMillis = millis();
     lasterror = millis();
+    interrupts();
   }
   else
   {
@@ -579,17 +580,43 @@ int BMSModule::getBalStat()
 
 bool BMSModule::hasDecodedData()
 {
-  return exists && (hasVoltageData || hasTemperatureData);
+  bool moduleExists;
+  bool voltageAvailable;
+  bool temperatureAvailable;
+
+  noInterrupts();
+  moduleExists = exists;
+  voltageAvailable = hasVoltageData;
+  temperatureAvailable = hasTemperatureData;
+  interrupts();
+
+  return moduleExists && (voltageAvailable || temperatureAvailable);
 }
 
 bool BMSModule::hasVoltageDataAvailable()
 {
-  return exists && hasVoltageData;
+  bool moduleExists;
+  bool voltageAvailable;
+
+  noInterrupts();
+  moduleExists = exists;
+  voltageAvailable = hasVoltageData;
+  interrupts();
+
+  return moduleExists && voltageAvailable;
 }
 
 bool BMSModule::hasTemperatureDataAvailable()
 {
-  return exists && hasTemperatureData;
+  bool moduleExists;
+  bool temperatureAvailable;
+
+  noInterrupts();
+  moduleExists = exists;
+  temperatureAvailable = hasTemperatureData;
+  interrupts();
+
+  return moduleExists && temperatureAvailable;
 }
 
 bool BMSModule::isExisting()
@@ -599,17 +626,47 @@ bool BMSModule::isExisting()
 
 bool BMSModule::hasRecentData()
 {
-  return hasVoltageDataAvailable() && ((millis() - lastVoltageUpdateMillis) <= timeout);
+  bool voltageAvailable;
+  uint32_t lastVoltageUpdate;
+  uint32_t timeoutValue;
+
+  noInterrupts();
+  voltageAvailable = exists && hasVoltageData;
+  lastVoltageUpdate = lastVoltageUpdateMillis;
+  timeoutValue = timeout;
+  interrupts();
+
+  return voltageAvailable && ((millis() - lastVoltageUpdate) <= timeoutValue);
 }
 
 bool BMSModule::isStale()
 {
-  return hasVoltageDataAvailable() && ((millis() - lastVoltageUpdateMillis) > timeout);
+  bool voltageAvailable;
+  uint32_t lastVoltageUpdate;
+  uint32_t timeoutValue;
+
+  noInterrupts();
+  voltageAvailable = exists && hasVoltageData;
+  lastVoltageUpdate = lastVoltageUpdateMillis;
+  timeoutValue = timeout;
+  interrupts();
+
+  return voltageAvailable && ((millis() - lastVoltageUpdate) > timeoutValue);
 }
 
 bool BMSModule::isTemperatureStale()
 {
-  return hasTemperatureDataAvailable() && ((millis() - lastTemperatureUpdateMillis) > timeout);
+  bool temperatureAvailable;
+  uint32_t lastTemperatureUpdate;
+  uint32_t timeoutValue;
+
+  noInterrupts();
+  temperatureAvailable = exists && hasTemperatureData;
+  lastTemperatureUpdate = lastTemperatureUpdateMillis;
+  timeoutValue = timeout;
+  interrupts();
+
+  return temperatureAvailable && ((millis() - lastTemperatureUpdate) > timeoutValue);
 }
 
 bool BMSModule::isReset()

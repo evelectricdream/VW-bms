@@ -2,6 +2,16 @@
 
 #include <Arduino.h>
 
+#if defined(__has_include)
+#if __has_include(<M5Dial.h>)
+#define VW_BMS_HAS_M5DIAL_UI 1
+#else
+#define VW_BMS_HAS_M5DIAL_UI 0
+#endif
+#else
+#define VW_BMS_HAS_M5DIAL_UI 0
+#endif
+
 //Set to the proper port for your USB connection - SerialUSB on Due (Native) or Serial for Due (Programming) or Teensy
 #define SERIALCONSOLE   Serial
 

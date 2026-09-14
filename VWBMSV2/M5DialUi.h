@@ -3,15 +3,8 @@
 #include <Arduino.h>
 #include "BMSModuleManager.h"
 
-#if defined(__has_include)
-#if __has_include(<M5Dial.h>)
+#if VW_BMS_HAS_M5DIAL_UI
 #include <M5Dial.h>
-#define VW_BMS_HAS_M5DIAL_UI 1
-#else
-#define VW_BMS_HAS_M5DIAL_UI 0
-#endif
-#else
-#define VW_BMS_HAS_M5DIAL_UI 0
 #endif
 
 class M5DialUi
