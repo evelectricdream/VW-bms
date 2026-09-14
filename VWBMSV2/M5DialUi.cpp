@@ -373,4 +373,3 @@ void M5DialUi::drawCellBar(float voltage)
   M5Dial.Display.fillRect(21, 165, width, 18, barColor);
 }
 #endif
-#include <cstring>

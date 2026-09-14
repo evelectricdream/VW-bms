@@ -117,6 +117,8 @@ void BMSModule::decodetemp(CAN_message_t &msg, int y)
 
 void BMSModule::decodecan(int Id, CAN_message_t &msg)
 {
+  bool voltageDecoded = false;
+
   switch (Id)
   {
     case 0:
@@ -125,6 +127,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       cellVolt[2] = (uint16_t(msg.buf[5] << 4) + uint16_t(msg.buf[4] >> 4) + 1000) * 0.001;
       cellVolt[1] = (msg.buf[3] + uint16_t((msg.buf[4] & 0x0F) << 8) + 1000) * 0.001;
       cellVolt[3] = (msg.buf[6] + uint16_t((msg.buf[7] & 0x0F) << 8) + 1000) * 0.001;
+      voltageDecoded = true;
 
       /*
         if (float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > 0 && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) < cellVolt[0] + VoltDelta && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > cellVolt[0] - VoltDelta || cellVolt[0] == 0)
@@ -167,6 +170,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       cellVolt[6] = (uint16_t(msg.buf[5] << 4) + uint16_t(msg.buf[4] >> 4) + 1000) * 0.001;
       cellVolt[5] = (msg.buf[3] + uint16_t((msg.buf[4] & 0x0F) << 8) + 1000) * 0.001;
       cellVolt[7] = (msg.buf[6] + uint16_t((msg.buf[7] & 0x0F) << 8) + 1000) * 0.001;
+      voltageDecoded = true;
       /*
         if (float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > 0 && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) < cellVolt[4] + VoltDelta && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > cellVolt[4] - VoltDelta || cellVolt[4] == 0)
         {
@@ -209,6 +213,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       cellVolt[10] = (uint16_t(msg.buf[5] << 4) + uint16_t(msg.buf[4] >> 4) + 1000) * 0.001;
       cellVolt[9] = (msg.buf[3] + uint16_t((msg.buf[4] & 0x0F) << 8) + 1000) * 0.001;
       cellVolt[11] = (msg.buf[6] + uint16_t((msg.buf[7] & 0x0F) << 8) + 1000) * 0.001;
+      voltageDecoded = true;
       /*
         if (float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > 0 && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) < cellVolt[8] + VoltDelta && float((uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001) > cellVolt[8] - VoltDelta || cellVolt[8] == 0)
         {
@@ -250,15 +255,19 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
     case 3:
       cmuerror = 0;
       cellVolt[12] = (uint16_t(msg.buf[1] >> 4) + uint16_t(msg.buf[2] << 4) + 1000) * 0.001;
+      voltageDecoded = true;
       break;
 
     default:
       break;
 
   }
-  hasVoltageData = true;
-  if (getLowTemp() < lowestTemperature) lowestTemperature = getLowTemp();
-  if (getHighTemp() > highestTemperature) highestTemperature = getHighTemp();
+  hasVoltageData = hasVoltageData || voltageDecoded;
+  if (hasTemperatureData)
+  {
+    if (getLowTemp() < lowestTemperature) lowestTemperature = getLowTemp();
+    if (getHighTemp() > highestTemperature) highestTemperature = getHighTemp();
+  }
 
   for (int i = 0; i < 13; i++)
   {
