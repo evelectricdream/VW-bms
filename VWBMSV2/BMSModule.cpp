@@ -258,7 +258,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   if (cmuerror == 0)
   {
-    lasterror = millis() + 1;
+    lasterror = millis();
   }
   else
   {
@@ -562,12 +562,12 @@ bool BMSModule::isExisting()
 
 bool BMSModule::hasRecentData()
 {
-  return lasterror != 0;
+  return exists && (lasterror != 0 || getHighCellV() > IgnoreCell || temperatures[0] > 0.5f || temperatures[1] > 0.5f || temperatures[2] > 0.5f);
 }
 
 bool BMSModule::isStale()
 {
-  return hasRecentData() && ((millis() - lasterror) > timeout);
+  return exists && hasRecentData() && ((millis() - lasterror) > timeout);
 }
 
 bool BMSModule::isReset()
