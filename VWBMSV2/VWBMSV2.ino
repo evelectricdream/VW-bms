@@ -23,6 +23,7 @@
 #include "config.h"
 #include "SerialConsole.h"
 #include "Logger.h"
+#include "M5DialUi.h"
 #include <ADC.h>  //https://github.com/pedvide/ADC
 #include <EEPROM.h>
 #include <FlexCAN.h>  //https://github.com/collin80/FlexCAN_Library
@@ -33,6 +34,7 @@
 #define CPU_REBOOT (_reboot_Teensyduino_());
 
 BMSModuleManager bms;
+M5DialUi m5DialUi(bms);
 SerialConsole console;
 EEPROMSettings settings;
 
@@ -339,6 +341,7 @@ void setup() {
   SERIALCONSOLE.begin(115200);
   SERIALCONSOLE.println("Starting up!");
   SERIALCONSOLE.println("SimpBMS V2 VW");
+  m5DialUi.begin();
 
   Serial2.begin(115200);
 
@@ -442,6 +445,8 @@ void loop() {
   while (Can0.available()) {
     canread();
   }
+
+  m5DialUi.update();
 
   if (SERIALCONSOLE.available() > 0) {
     menu();

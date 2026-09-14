@@ -22,9 +22,19 @@ BMSModule::BMSModule()
   balstat = 0;
   exists = false;
   reset = false;
+  alerts = 0;
+  faults = 0;
+  COVFaults = 0;
+  CUVFaults = 0;
+  sensor = 0;
+  scells = 0;
   moduleAddress = 0;
+  lasterror = 0;
+  cmuerror = 0;
   timeout = 30000; //milliseconds before comms timeout;
   type = 1;
+  IgnoreCell = 0.0f;
+  VoltDelta = 0.0f;
 }
 
 void BMSModule::clearmodule()
@@ -248,7 +258,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   if (cmuerror == 0)
   {
-    lasterror = millis();
+    lasterror = millis() + 1;
   }
   else
   {
@@ -304,7 +314,7 @@ uint8_t BMSModule::getCUVCells()
 
 float BMSModule::getCellVoltage(int cell)
 {
-  if (cell < 0 || cell > 13) return 0.0f;
+  if (cell < 0 || cell >= 13) return 0.0f;
   return cellVolt[cell];
 }
 
@@ -367,13 +377,13 @@ float BMSModule::getLowestModuleVolt()
 
 float BMSModule::getHighestCellVolt(int cell)
 {
-  if (cell < 0 || cell > 13) return 0.0f;
+  if (cell < 0 || cell >= 13) return 0.0f;
   return highestCellVolt[cell];
 }
 
 float BMSModule::getLowestCellVolt(int cell)
 {
-  if (cell < 0 || cell > 13) return 0.0f;
+  if (cell < 0 || cell >= 13) return 0.0f;
   return lowestCellVolt[cell];
 }
 
@@ -427,6 +437,8 @@ float BMSModule::getLowTemp()
   {
     return temperatures[0];
   }
+
+  return -80.0f;
 }
 
 float BMSModule::getHighTemp()
@@ -499,12 +511,14 @@ float BMSModule::getAvgTemp()
   {
     return temperatures[0];
   }
+
+  return -80.0f;
 }
 
 float BMSModule::getModuleVoltage()
 {
   moduleVolt = 0;
-  for (int I; I < 13; I++)
+  for (int I = 0; I < 13; I++)
   {
     if (cellVolt[I] > IgnoreCell && cellVolt[I] < 5.0)
     {
@@ -544,6 +558,16 @@ int BMSModule::getBalStat()
 bool BMSModule::isExisting()
 {
   return exists;
+}
+
+bool BMSModule::hasRecentData()
+{
+  return lasterror != 0;
+}
+
+bool BMSModule::isStale()
+{
+  return hasRecentData() && ((millis() - lasterror) > timeout);
 }
 
 bool BMSModule::isReset()

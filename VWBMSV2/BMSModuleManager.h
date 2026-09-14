@@ -38,7 +38,10 @@ class BMSModuleManager
     void printAllCSV(unsigned long timestamp, float current, int SOC);
     void printPackSummary();
     void printPackDetails(int digits);
-int getNumModules();
+    int getNumModules();
+    BMSModule *getModule(int moduleAddress);
+    int getFirstExistingModule();
+    int getNextExistingModule(int currentModule, int direction);
     bool checkcomms();
       int getBalancing();
 

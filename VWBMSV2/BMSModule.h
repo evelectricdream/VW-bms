@@ -34,6 +34,8 @@ class BMSModule
     int getType();
     int getBalStat();
     bool isExisting();
+    bool hasRecentData();
+    bool isStale();
     bool isReset();
     void setReset(bool ex);
     void setExists(bool ex);
