@@ -343,12 +343,9 @@ void setup() {
   SERIALCONSOLE.begin(115200);
   SERIALCONSOLE.println("Starting up!");
   SERIALCONSOLE.println("SimpBMS V2 VW");
+  VE.begin(115200);
 #if VW_BMS_HAS_M5DIAL_UI
   m5DialUi.begin();
-#endif
-
-#if !VW_BMS_HAS_M5DIAL_UI
-  VE.begin(115200);
 #endif
 
   // Display reason the Teensy was last reset

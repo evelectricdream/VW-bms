@@ -32,7 +32,7 @@ BMSModule::BMSModule()
   lasterror = 0;
   lastUpdateMillis = 0;
   cmuerror = 0;
-  timeout = 30000; //milliseconds before comms timeout;
+  timeout = 30000U; //milliseconds before comms timeout;
   type = 1;
   IgnoreCell = 0.0f;
   VoltDelta = 0.0f;

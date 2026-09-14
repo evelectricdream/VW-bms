@@ -42,8 +42,8 @@ class M5DialUi
 
 #if VW_BMS_HAS_M5DIAL_UI
     Screen lastRenderedScreen;
-    String headerCache;
-    String footerCache;
+    const char *headerCache;
+    const char *footerCache;
     uint16_t footerColorCache;
     String lineCache[LINE_COUNT];
     uint16_t colorCache[LINE_COUNT];
