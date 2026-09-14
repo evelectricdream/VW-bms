@@ -72,5 +72,7 @@ class BMSModule
     uint8_t cmuerror;
     uint32_t timeout;
     int type;
+    bool hasVoltageData;
+    bool hasTemperatureData;
 
 };

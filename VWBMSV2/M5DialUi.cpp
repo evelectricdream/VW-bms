@@ -261,6 +261,7 @@ void M5DialUi::renderTemperatures(BMSModule *module)
 void M5DialUi::renderNoData(const char *title)
 {
 #if VW_BMS_HAS_M5DIAL_UI
+  const char *footer = (currentScreen == CellScreen) ? "Turn=cell  Press=next" : "Turn=module  Press=next";
   drawHeader(title);
   drawLine(0, selectedModule > 0 ? (String("Module ") + String(selectedModule)) : String("No module selected"), UI_ACCENT);
   drawLine(1, "No data yet", UI_WARN);
@@ -270,7 +271,7 @@ void M5DialUi::renderNoData(const char *title)
   drawLine(5, "");
   drawLine(6, "");
   M5Dial.Display.fillRect(20, 164, 200, 38, UI_BACKGROUND);
-  drawFooter("Turn=select  Press=next");
+  drawFooter(footer);
 #endif
 }
 

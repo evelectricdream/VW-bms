@@ -36,6 +36,8 @@ BMSModule::BMSModule()
   type = 1;
   IgnoreCell = 0.0f;
   VoltDelta = 0.0f;
+  hasVoltageData = false;
+  hasTemperatureData = false;
 }
 
 void BMSModule::clearmodule()
@@ -53,6 +55,8 @@ void BMSModule::clearmodule()
   reset = false;
   moduleAddress = 0;
   lastUpdateMillis = 0;
+  hasVoltageData = false;
+  hasTemperatureData = false;
 }
 
 void BMSModule::decodebalVW(CAN_message_t &msg) {
@@ -249,6 +253,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
       break;
 
   }
+  hasVoltageData = true;
   if (getLowTemp() < lowestTemperature) lowestTemperature = getLowTemp();
   if (getHighTemp() > highestTemperature) highestTemperature = getHighTemp();
 
@@ -430,6 +435,7 @@ float BMSModule::getLowTemp()
           }
         }
       }
+      hasTemperatureData = true;
     }
     else
     {
@@ -560,7 +566,7 @@ int BMSModule::getBalStat()
 
 bool BMSModule::hasDecodedData()
 {
-  return exists && (getHighCellV() > IgnoreCell || temperatures[0] > 0.5f || temperatures[1] > 0.5f || temperatures[2] > 0.5f);
+  return exists && (hasVoltageData || hasTemperatureData);
 }
 
 bool BMSModule::isExisting()
