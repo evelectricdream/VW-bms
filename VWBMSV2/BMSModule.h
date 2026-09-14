@@ -34,9 +34,12 @@ class BMSModule
     int getType();
     int getBalStat();
     bool hasDecodedData();
+    bool hasVoltageDataAvailable();
+    bool hasTemperatureDataAvailable();
     bool isExisting();
     bool hasRecentData();
     bool isStale();
+    bool isTemperatureStale();
     bool isReset();
     void setReset(bool ex);
     void setExists(bool ex);
@@ -68,7 +71,8 @@ class BMSModule
     int scells;
     uint32_t balstat;
     uint32_t lasterror;
-    uint32_t lastUpdateMillis;
+    uint32_t lastVoltageUpdateMillis;
+    uint32_t lastTemperatureUpdateMillis;
     uint8_t cmuerror;
     uint32_t timeout;
     int type;

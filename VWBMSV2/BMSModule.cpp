@@ -30,7 +30,8 @@ BMSModule::BMSModule()
   scells = 0;
   moduleAddress = 0;
   lasterror = 0;
-  lastUpdateMillis = 0;
+  lastVoltageUpdateMillis = 0;
+  lastTemperatureUpdateMillis = 0;
   cmuerror = 0;
   timeout = 30000U; //milliseconds before comms timeout;
   type = 1;
@@ -54,7 +55,8 @@ void BMSModule::clearmodule()
   exists = false;
   reset = false;
   moduleAddress = 0;
-  lastUpdateMillis = 0;
+  lastVoltageUpdateMillis = 0;
+  lastTemperatureUpdateMillis = 0;
   hasVoltageData = false;
   hasTemperatureData = false;
 }
@@ -112,7 +114,7 @@ void BMSModule::decodetemp(CAN_message_t &msg, int y)
   }
 
   hasTemperatureData = true;
-  lastUpdateMillis = millis();
+  lastTemperatureUpdateMillis = millis();
 }
 
 void BMSModule::decodecan(int Id, CAN_message_t &msg)
@@ -277,7 +279,7 @@ void BMSModule::decodecan(int Id, CAN_message_t &msg)
 
   if (cmuerror == 0)
   {
-    lastUpdateMillis = millis();
+    lastVoltageUpdateMillis = millis();
     lasterror = millis();
   }
   else
@@ -580,6 +582,16 @@ bool BMSModule::hasDecodedData()
   return exists && (hasVoltageData || hasTemperatureData);
 }
 
+bool BMSModule::hasVoltageDataAvailable()
+{
+  return exists && hasVoltageData;
+}
+
+bool BMSModule::hasTemperatureDataAvailable()
+{
+  return exists && hasTemperatureData;
+}
+
 bool BMSModule::isExisting()
 {
   return exists;
@@ -587,12 +599,17 @@ bool BMSModule::isExisting()
 
 bool BMSModule::hasRecentData()
 {
-  return hasDecodedData() && ((millis() - lastUpdateMillis) <= timeout);
+  return hasVoltageDataAvailable() && ((millis() - lastVoltageUpdateMillis) <= timeout);
 }
 
 bool BMSModule::isStale()
 {
-  return hasDecodedData() && ((millis() - lastUpdateMillis) > timeout);
+  return hasVoltageDataAvailable() && ((millis() - lastVoltageUpdateMillis) > timeout);
+}
+
+bool BMSModule::isTemperatureStale()
+{
+  return hasTemperatureDataAvailable() && ((millis() - lastTemperatureUpdateMillis) > timeout);
 }
 
 bool BMSModule::isReset()

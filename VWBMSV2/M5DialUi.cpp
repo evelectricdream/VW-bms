@@ -145,12 +145,32 @@ BMSModule *M5DialUi::getSelectedModule()
 
 bool M5DialUi::moduleHasData(BMSModule *module)
 {
-  return module != nullptr && module->hasDecodedData();
+  if (module == nullptr)
+  {
+    return false;
+  }
+
+  if (currentScreen == TemperatureScreen)
+  {
+    return module->hasTemperatureDataAvailable();
+  }
+
+  return module->hasVoltageDataAvailable();
 }
 
 bool M5DialUi::moduleIsStale(BMSModule *module)
 {
-  return module != nullptr && module->isExisting() && module->isStale();
+  if (module == nullptr || !module->isExisting())
+  {
+    return false;
+  }
+
+  if (currentScreen == TemperatureScreen)
+  {
+    return module->isTemperatureStale();
+  }
+
+  return module->isStale();
 }
 
 void M5DialUi::render()
